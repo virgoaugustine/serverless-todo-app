@@ -7,6 +7,8 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 
 provider:
   name: aws
@@ -42,6 +44,23 @@ provider:
             - xray:PutTraceSegments
           Resource: "*"
 
+
+# validation of endpoints against schema
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Serverless todo App
+        description: A serverless todo App
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(models/create-todo-model.json)}
+    
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema: ${file(models/update-todo-model.json)}
 
 functions:
 
@@ -92,9 +111,12 @@ functions:
           cors: true
           authorizer: Auth
           reqValidatorName: RequestBodyValidator
-          request:
-            schemas:
-              application/json: ${file(models/create-todo-model.json)}
+          documentation:
+            summary: Create a new todo
+            description: Create a new todo
+            requestModels:
+              'application/json': CreateTodoRequest
+     
 
     iamRoleStatements:
       - Effect: Allow
@@ -118,6 +140,11 @@ functions:
           path: todos/{todoId}
           cors: true
           reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: update a todo
+            description: update a todo
+            requestModels:
+              'application/json': UpdateTodoRequest
   
     iamRoleStatements:
       - Effect: Allow
@@ -178,21 +205,22 @@ functions:
         Resource:
           - "*"
 
+
 resources:
   Resources:
     # Add necessary AWS resources. You will need at least the following AWS resources
     # TODO: Fill the properties
-    # Feel free to change the names as you like. 
+    # Feel free to change the names as you like.     
+
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
         Name: 'request-body-validator'
         RestApiId:
           Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
+        ValidateRequestBody: true 
         ValidateRequestParameters: false
 
-        
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:

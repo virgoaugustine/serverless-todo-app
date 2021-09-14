@@ -36,7 +36,6 @@ export async function createTodo(userId: string, createTodoRequest: CreateTodoRe
   logger.info(`Creating todo ${todoId} for user ${userId}`, { userId, todoId, todoItem: newItem })
 
   await todosAccess.createTodoItem(newItem)
-
   return newItem
 }
 
